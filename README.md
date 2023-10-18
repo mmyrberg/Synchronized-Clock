@@ -1,3 +1,2 @@
 # Synchronized-Clock
-Inlämningsuppgift i kursen Datorkommunikation, nätverk och konnektivitet
 Applikation under utveckling. Mer info kommer...
