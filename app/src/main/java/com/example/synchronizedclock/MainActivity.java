@@ -18,6 +18,10 @@ import com.example.synchronizedclock.databinding.ActivityMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
+
+import java.time.LocalTime;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,9 +44,23 @@ public class MainActivity extends AppCompatActivity {
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                /*
+                Snackbar.make(view, "Här kommer tiden synas", Snackbar.LENGTH_LONG)
                         .setAnchorView(R.id.fab)
                         .setAction("Action", null).show();
+                 */
+                //Fältet som vi vill skriva till
+                final TextView text1 = (TextView) findViewById(R.id.textview_first);
+                text1.setTextSize(60);
+
+                LocalTime localTime = LocalTime.now(); // Get the current system time
+                int hours = localTime.getHour();
+                int minutes = localTime.getMinute();
+                int seconds = localTime.getSecond();
+
+                // Format the time as "HH:MM:SS"
+                String time = String.format("%02d:%02d:%02d", hours, minutes, seconds); // Format the time as "HH:MM"
+                text1.setText(time);
             }
         });
     }
