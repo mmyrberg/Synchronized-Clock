@@ -20,6 +20,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import org.apache.commons.net.ntp.NTPUDPClient;
+import org.apache.commons.net.ntp.TimeInfo;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.LocalTime;
 import java.util.Date;
 
@@ -65,6 +71,47 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+<<<<<<< Updated upstream
+=======
+    public void SystemTime() {
+        TextView t = findViewById(R.id.textview_first);
+        t.setTextSize(60);
+
+        LocalTime localTime = LocalTime.now(); // Get the current system time
+        int hours = localTime.getHour();
+        int minutes = localTime.getMinute();
+        int seconds = localTime.getSecond();
+
+        // Format the time as "HH:MM:SS"
+        String time = String.format("%02d:%02d:%02d", hours, minutes, seconds); // Format the time as "HH:MM:SS"
+        t.setText(time);
+    }
+
+    //Method for getting the NTP time.
+    public String NtpTime() {
+        TextView t = findViewById(R.id.textView4);
+        t.setTextSize(60);
+
+        NTPUDPClient client = new NTPUDPClient();
+        client.setDefaultTimeout(5000); // Set a timeout in milliseconds.
+
+        try {
+            TimeInfo timeInfo = client.getTime(InetAddress.getByName("pool.ntp.org")); // You can change the NTP server address.
+
+            // Get the NTP time in milliseconds
+            long ntpTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();
+
+            return String.valueOf(ntpTime);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null; // Handle errors or exceptions as needed.
+        } finally {
+            client.close();
+        }
+    }
+
+
+>>>>>>> Stashed changes
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
