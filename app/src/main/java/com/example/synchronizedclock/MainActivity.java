@@ -1,14 +1,15 @@
 package com.example.synchronizedclock;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
-
-import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Handler;
 import android.view.View;
 
-import androidx.core.view.WindowCompat;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -25,14 +26,18 @@ import org.apache.commons.net.ntp.TimeInfo;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
+    private TextView textViewLabel;
+    private TextView textViewTime;
+    private final Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,50 +52,82 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        SystemTime();
+        textViewLabel = findViewById(R.id.textViewLabel); // Initialize the TextViews here
+        textViewTime = findViewById(R.id.textViewTime);
+
+        updateTimeBasedOnNetwork();
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                handler.postDelayed(this, 1000);
+                updateTimeBasedOnNetwork();
+            }
+        }, 1000);
+        super.onResume();
 
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SystemTime();
+                updateTimeBasedOnNetwork();
+                //NtpTime();
             }
         });
     }
 
-    public void SystemTime() {
-        TextView t = findViewById(R.id.textview_first);
-        t.setTextSize(60);
-
-        LocalTime localTime = LocalTime.now(); // Get the current system time
-        int hours = localTime.getHour();
-        int minutes = localTime.getMinute();
-        int seconds = localTime.getSecond();
-
-        // Format the time as "HH:MM:SS"
-        String time = String.format("%02d:%02d:%02d", hours, minutes, seconds); // Format the time as "HH:MM:SS"
-        t.setText(time);
+    private String SystemTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        return sdf.format(new Date());
     }
 
     //Method for getting the NTP time.
-    public String NtpTime() {
-        TextView t = findViewById(R.id.textView4);
-        t.setTextSize(60);
-
+    private String NtpTime() {
         NTPUDPClient client = new NTPUDPClient();
-        client.setDefaultTimeout(5000); // Set a timeout in milliseconds.
+        client.setDefaultTimeout(3000);
 
         try {
-            TimeInfo timeInfo = client.getTime(InetAddress.getByName("pool.ntp.org")); // You can change the NTP server address.
+            InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org");
+            TimeInfo timeInfo = client.getTime(inetAddress);
+            long ntpTimeMillis = timeInfo.getMessage().getTransmitTimeStamp().getTime();
 
-            // Get the NTP time in milliseconds
-            long ntpTime = timeInfo.getMessage().getTransmitTimeStamp().getTime();
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+            String formattedNtpTime = sdf.format(new Date(ntpTimeMillis));
 
-            return String.valueOf(ntpTime);
+            return formattedNtpTime;
         } catch (IOException e) {
             e.printStackTrace();
-            return null; // Handle errors or exceptions as needed.
+            return "Error: " + e.getMessage();
         } finally {
             client.close();
+        }
+    }
+
+    //Check if internet connection.
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+        return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    }
+
+    private void updateTimeBasedOnNetwork() {
+        if (isNetworkAvailable()) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String networkTime = NtpTime();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textViewTime.setText(networkTime);
+                            textViewLabel.setText("Network time");
+                        }
+                    });
+                }
+            }).start();
+        } else {
+            String systemTime = SystemTime();
+            textViewTime.setText(systemTime);
+            textViewLabel.setText("System time");
         }
     }
 
