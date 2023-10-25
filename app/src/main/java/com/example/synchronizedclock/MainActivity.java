@@ -1,6 +1,7 @@
 package com.example.synchronizedclock;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.os.Bundle;
@@ -8,7 +9,6 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Handler;
-import android.view.View;
 
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -26,18 +26,17 @@ import org.apache.commons.net.ntp.TimeInfo;
 
 import java.io.IOException;
 import java.net.InetAddress;
+
 import java.text.SimpleDateFormat;
-import java.time.LocalTime;
 import java.util.Date;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
     private TextView textViewLabel;
     private TextView textViewTime;
-    private final Handler handler = new Handler();
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +51,13 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
+        // Initialize TextView elements in app layout.
         textViewLabel = findViewById(R.id.textViewLabel); // Initialize the TextViews here
         textViewTime = findViewById(R.id.textViewTime);
 
-        updateTimeBasedOnNetwork();
+        //updateTimeBasedOnNetwork();
 
+        // Method to update the displayed time every 1 second. Uses a Handler to create a time-based loop.
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -65,22 +66,23 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 1000);
         super.onResume();
-
+/*
         binding.fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 updateTimeBasedOnNetwork();
                 //NtpTime();
             }
-        });
+        });*/
     }
 
+    // Method for getting System time.
     private String SystemTime() {
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-        return sdf.format(new Date());
+        SimpleDateFormat date = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+        return date.format(new Date());
     }
 
-    //Method for getting the NTP time.
+    // Method for getting the NTP time.
     private String NtpTime() {
         NTPUDPClient client = new NTPUDPClient();
         client.setDefaultTimeout(3000);
@@ -90,8 +92,8 @@ public class MainActivity extends AppCompatActivity {
             TimeInfo timeInfo = client.getTime(inetAddress);
             long ntpTimeMillis = timeInfo.getMessage().getTransmitTimeStamp().getTime();
 
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-            String formattedNtpTime = sdf.format(new Date(ntpTimeMillis));
+            SimpleDateFormat date = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+            String formattedNtpTime = date.format(new Date(ntpTimeMillis));
 
             return formattedNtpTime;
         } catch (IOException e) {
@@ -102,13 +104,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //Check if internet connection.
+    // Check if the internet connection is available. Returns true or false.
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
         return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     }
 
+    // If internet is available -> show NTP time, otherwise show System time.
     private void updateTimeBasedOnNetwork() {
         if (isNetworkAvailable()) {
             new Thread(new Runnable() {
@@ -120,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             textViewTime.setText(networkTime);
                             textViewLabel.setText("Network time");
+                            textViewLabel.setTextColor(Color.BLUE);
                         }
                     });
                 }
@@ -128,9 +132,11 @@ public class MainActivity extends AppCompatActivity {
             String systemTime = SystemTime();
             textViewTime.setText(systemTime);
             textViewLabel.setText("System time");
+            textViewLabel.setTextColor(Color.RED);
         }
     }
-
+}
+/*
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -159,4 +165,4 @@ public class MainActivity extends AppCompatActivity {
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
     }
-}
+}*/
