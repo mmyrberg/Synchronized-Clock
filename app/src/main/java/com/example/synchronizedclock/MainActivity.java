@@ -101,32 +101,29 @@ public class MainActivity extends AppCompatActivity {
     // If internet is available -> show NTP time, otherwise show System time
     private void updateTimeBasedOnNetwork() {
         if (isNetworkAvailable()) {
-
             // Create a thread to perform network time retrieval
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     String networkTime = NtpTime();
-
-                    // Android user interface (UI) operations must be executed on the main UI thread
-                    // so when the NtpTime()-function is performed on a separate thread,
-                    // we need another thread (runOnUiThread) to switch back to the main UI thread for updating the UI components
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            textViewClock.setText(networkTime);
-                            textViewLabel.setText("Network time");
-                            textViewLabel.setTextColor(Color.BLUE);
-                        }
-                    });
+                    updateUI(networkTime, "Network time", Color.BLUE);
                 }
             }).start();
 
         } else { // Call SystemTime() function and show system time on display
             String systemTime = SystemTime();
-            textViewClock.setText(systemTime);
-            textViewLabel.setText("System time");
-            textViewLabel.setTextColor(Color.RED);
+            updateUI(systemTime, "System time", Color.RED);
         }
+    }
+
+    private void updateUI(String time, String label, int labelColor) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textViewClock.setText(time);
+                textViewLabel.setText(label);
+                textViewLabel.setTextColor(labelColor);
+            }
+        });
     }
 }
