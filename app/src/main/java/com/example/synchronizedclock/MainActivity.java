@@ -3,7 +3,8 @@ package com.example.synchronizedclock;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
-import android.net.NetworkCapabilities;
+import android.net.Network;
+
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -94,14 +95,19 @@ public class MainActivity extends AppCompatActivity {
     // Check if internet connection is available. Return true or false
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
-        return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        Network network = connectivityManager.getActiveNetwork();
+
+        if (network != null) {
+            return true; // There is an active network.
+        } else {
+            return false; // No active network available.
+        }
     }
 
-    // If internet is available -> show NTP time, otherwise show System time
+    // If network is available -> show NTP time, otherwise show System time
     private void updateTimeBasedOnNetwork() {
         if (isNetworkAvailable()) {
-            // Create a thread to perform network time retrieval
+            // Create a new thread to perform network time retrieval
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -116,6 +122,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Android user interface (UI) operations must be executed on the main UI thread
+    // so when the NtpTime()-function is called on a separate thread in the updateTime()-function,
+    // we need another thread (runOnUiThread) to switch back to the main UI thread for updating the UI components
+    // the updateUI-function implements this runOnUiThread
     private void updateUI(String time, String label, int labelColor) {
         runOnUiThread(new Runnable() {
             @Override
