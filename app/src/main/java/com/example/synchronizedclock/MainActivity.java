@@ -17,8 +17,6 @@ import androidx.navigation.ui.NavigationUI;
 
 import com.example.synchronizedclock.databinding.ActivityMainBinding;
 
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.TextView;
 
 import org.apache.commons.net.ntp.NTPUDPClient;
@@ -34,9 +32,10 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
-    private TextView textViewLabel;
-    private TextView textViewTime;
-    private Handler handler = new Handler();
+    private TextView textViewLabel; // Declare TextView for time label
+    private TextView textViewClock; // Declare TextView for clock
+    private Handler handler = new Handler(); // Initialize handler for ticking clock
+    private SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());  // Initialize clock to format the time values as strings in the "HH:mm:ss" format
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,51 +50,39 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        // Initialize TextView elements in app layout.
-        textViewLabel = findViewById(R.id.textViewLabel); // Initialize the TextViews here
-        textViewTime = findViewById(R.id.textViewTime);
+        // Initialize TimeView components
+        textViewLabel = findViewById(R.id.textViewLabel);
+        textViewClock = findViewById(R.id.textViewClock);
 
-        //updateTimeBasedOnNetwork();
-
-        // Method to update the displayed time every 1 second. Uses a Handler to create a time-based loop.
+        // Method to update the displayed time every second. Creates a time-based loop with handler (ticking clock)
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 handler.postDelayed(this, 1000);
-                updateTimeBasedOnNetwork();
+                updateTimeBasedOnNetwork(); // Calls
             }
         }, 1000);
         super.onResume();
-/*
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                updateTimeBasedOnNetwork();
-                //NtpTime();
-            }
-        });*/
     }
 
-    // Method for getting System time.
+    // Method for getting System time
     private String SystemTime() {
-        SimpleDateFormat date = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-        return date.format(new Date());
+        return clock.format(new Date()); // Format the time as "HH:mm:ss"
     }
 
-    // Method for getting the NTP time.
+    // Method for getting the NTP time
     private String NtpTime() {
-        NTPUDPClient client = new NTPUDPClient();
-        client.setDefaultTimeout(3000);
+        NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP implementation of a client for the Network Time Protocol (NTP)
+        client.setDefaultTimeout(3000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
 
         try {
-            InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org");
-            TimeInfo timeInfo = client.getTime(inetAddress);
-            long ntpTimeMillis = timeInfo.getMessage().getTransmitTimeStamp().getTime();
+            InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of NTP server
+            TimeInfo timeInfo = client.getTime(inetAddress); // Retrieve time from the NTP server
+            long ntpTime = timeInfo.getMessage().getTransmitTimeStamp().getTime(); // Get NTP time in milliseconds
 
-            SimpleDateFormat date = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
-            String formattedNtpTime = date.format(new Date(ntpTimeMillis));
+            return clock.format(new Date(ntpTime)); // Format the NTP time into a date-time string
 
-            return formattedNtpTime;
+        // Handle exeptions and close the DatagramSocket
         } catch (IOException e) {
             e.printStackTrace();
             return "Error: " + e.getMessage();
@@ -104,65 +91,42 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Check if the internet connection is available. Returns true or false.
+    // Check if internet connection is available. Return true or false
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkCapabilities networkCapabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
         return networkCapabilities != null && networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
     }
 
-    // If internet is available -> show NTP time, otherwise show System time.
+    // If internet is available -> show NTP time, otherwise show System time
     private void updateTimeBasedOnNetwork() {
         if (isNetworkAvailable()) {
+
+            // Create a thread to perform network time retrieval
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     String networkTime = NtpTime();
+
+                    // Android user interface (UI) operations must be executed on the main UI thread
+                    // so when the NtpTime()-function is performed on a separate thread,
+                    // we need another thread (runOnUiThread) to switch back to the main UI thread for updating the UI components
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textViewTime.setText(networkTime);
+                            textViewClock.setText(networkTime);
                             textViewLabel.setText("Network time");
                             textViewLabel.setTextColor(Color.BLUE);
                         }
                     });
                 }
             }).start();
-        } else {
+
+        } else { // Call SystemTime() function and show system time on display
             String systemTime = SystemTime();
-            textViewTime.setText(systemTime);
+            textViewClock.setText(systemTime);
             textViewLabel.setText("System time");
             textViewLabel.setTextColor(Color.RED);
         }
     }
 }
-/*
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
-    }
-}*/
