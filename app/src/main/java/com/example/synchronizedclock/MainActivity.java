@@ -51,11 +51,12 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-        // Initialize TimeView components
+        // Initialize TextView components
         textViewLabel = findViewById(R.id.textViewLabel);
         textViewClock = findViewById(R.id.textViewClock);
 
-        // Method to update the displayed time every second. Creates a time-based loop with handler (ticking clock)
+        // Update the displayed time by scheduling a repeating task using a Handler
+        // Calls the updateTimeBasedOnNetwork() method to update the displayed time every second (ticking clock)
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -67,23 +68,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Method for getting System time
-    private String SystemTime() {
+    private String getSystemTime() {
         return clock.format(new Date()); // Format the time as "HH:mm:ss"
     }
 
     // Method for getting the NTP time
-    private String NtpTime() {
-        NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP implementation of a client for the Network Time Protocol (NTP)
-        client.setDefaultTimeout(3000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
+    private String getNtpTime() {
+        NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP (DatagramSocket) connection with NTP server
+        client.setDefaultTimeout(10000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
 
         try {
-            InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of NTP server
-            TimeInfo timeInfo = client.getTime(inetAddress); // Retrieve time from the NTP server
-            long ntpTime = timeInfo.getMessage().getTransmitTimeStamp().getTime(); // Get NTP time in milliseconds
+            InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of the NTP server
+            TimeInfo timeInfo = client.getTime(inetAddress); // Request time information from the NTP server
+            long ntpTime = timeInfo.getReturnTime(); // Retrieve the NTP time in milliseconds
 
-            return clock.format(new Date(ntpTime)); // Format the NTP time into a date-time string
+            return clock.format(new Date(ntpTime)); // Return the NTP time (milliseconds) and format it into "HH:mm:ss"
 
-        // Handle exeptions and close the DatagramSocket
+            // Handle exeptions and close the DatagramSocket
         } catch (IOException e) {
             e.printStackTrace();
             return "Error: " + e.getMessage();
@@ -98,9 +99,9 @@ public class MainActivity extends AppCompatActivity {
         Network network = connectivityManager.getActiveNetwork();
 
         if (network != null) {
-            return true; // There is an active network.
+            return true; // There is an active network
         } else {
-            return false; // No active network available.
+            return false; // No active network available
         }
     }
 
@@ -111,20 +112,20 @@ public class MainActivity extends AppCompatActivity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String networkTime = NtpTime();
+                    String networkTime = getNtpTime();
                     updateUI(networkTime, "Network time", Color.BLUE);
                 }
             }).start();
 
         } else { // Call SystemTime() function and show system time on display
-            String systemTime = SystemTime();
+            String systemTime = getSystemTime();
             updateUI(systemTime, "System time", Color.RED);
         }
     }
 
     // Android user interface (UI) operations must be executed on the main UI thread
-    // so when the NtpTime()-function is called on a separate thread in the updateTime()-function,
-    // we need another thread (runOnUiThread) to switch back to the main UI thread for updating the UI components
+    // so when the NtpTime()-function is called on a separate thread in the updateTimeBasedOnNetwork()-function,
+    // we need another thread (runOnUiThread) to switch back to the main UI thread for updating the UI components of network time
     // the updateUI-function implements this runOnUiThread
     private void updateUI(String time, String label, int labelColor) {
         runOnUiThread(new Runnable() {
