@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 handler.postDelayed(this, 1000);
-                updateTimeBasedOnNetwork(); // Calls
+                updateTimeBasedOnNetwork();
             }
         }, 1000);
         super.onResume();
