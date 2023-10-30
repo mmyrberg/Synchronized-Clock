@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler = new Handler(); // Initialize handler for ticking clock
     private SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());  // Initialize clock to format the time values as strings in the "HH:mm:ss" format
 
+    // Start the activity (sets up user interface and implements a ticking clock)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
     }
 
-    // Method for getting System time
+    // Method for getting the System time
     private String getSystemTime() {
         return clock.format(new Date()); // Format the time as "HH:mm:ss"
     }
@@ -75,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
     // Method for getting the NTP time
     private String getNtpTime() {
         NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP (DatagramSocket) connection with NTP server
-        client.setDefaultTimeout(10000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
+        client.setDefaultTimeout(3000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
 
         try {
             InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of the NTP server
@@ -124,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Android user interface (UI) operations must be executed on the main UI thread
-    // so when the NtpTime()-function is called on a separate thread in the updateTimeBasedOnNetwork()-function,
+    // so when the getNtpTime()-function is called on a separate thread in the updateTimeBasedOnNetwork()-function,
     // we need another thread (runOnUiThread) to switch back to the main UI thread for updating the UI components of network time
     // the updateUI-function implements this runOnUiThread
     private void updateUI(String time, String label, int labelColor) {
