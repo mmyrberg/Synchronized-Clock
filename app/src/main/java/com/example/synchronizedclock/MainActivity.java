@@ -29,6 +29,7 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity {
     private AppBarConfiguration appBarConfiguration;
@@ -36,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewLabel; // Declare TextView for time label
     private TextView textViewClock; // Declare TextView for clock
     private Handler handler = new Handler(); // Initialize handler for ticking clock
-    private SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());  // Initialize clock to format the time values as strings in the "HH:mm:ss" format
+    private SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss");  // Initialize clock to format the time values as strings in the "HH:mm:ss" format
 
     // Start the activity (sets up user interface and implements a ticking clock)
     @Override
@@ -55,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         // Initialize TextView components
         textViewLabel = findViewById(R.id.textViewLabel);
         textViewClock = findViewById(R.id.textViewClock);
+
+        clock.setTimeZone(TimeZone.getTimeZone("Europe/Stockholm"));
 
         // Update the displayed time by scheduling a repeating task using a Handler
         // Calls the updateTimeBasedOnNetwork() method to update the displayed time every second (ticking clock)
