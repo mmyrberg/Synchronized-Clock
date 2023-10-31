@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewLabel; // Declare TextView for time label
     private TextView textViewClock; // Declare TextView for clock
     private Handler handler = new Handler(); // Initialize handler for ticking clock
-    private SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss");  // Initialize clock to format the time values as strings in the "HH:mm:ss" format
+    private SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());  // Initialize clock to format the time values as strings in the "HH:mm:ss" format
 
     // Start the activity (sets up user interface and implements a ticking clock)
     @Override
@@ -57,8 +57,6 @@ public class MainActivity extends AppCompatActivity {
         textViewLabel = findViewById(R.id.textViewLabel);
         textViewClock = findViewById(R.id.textViewClock);
 
-        clock.setTimeZone(TimeZone.getTimeZone("Europe/Stockholm"));
-
         // Update the displayed time by scheduling a repeating task using a Handler
         // Calls the updateTimeBasedOnNetwork() method to update the displayed time every second (ticking clock)
         handler.postDelayed(new Runnable() {
@@ -73,19 +71,21 @@ public class MainActivity extends AppCompatActivity {
 
     // Method for getting the System time
     private String getSystemTime() {
+        clock.setTimeZone(TimeZone.getDefault());
         return clock.format(new Date()); // Format the time as "HH:mm:ss"
     }
 
     // Method for getting the NTP time
     private String getNtpTime() {
         NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP (DatagramSocket) connection with NTP server
-        client.setDefaultTimeout(3000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
+        client.setDefaultTimeout(5000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
 
         try {
             InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of the NTP server
             TimeInfo timeInfo = client.getTime(inetAddress); // Request time information from the NTP server
             long ntpTime = timeInfo.getReturnTime(); // Retrieve the NTP time in milliseconds
 
+            clock.setTimeZone(TimeZone.getTimeZone("Europe/Stockholm"));
             return clock.format(new Date(ntpTime)); // Return the NTP time (milliseconds) and format it into "HH:mm:ss"
 
             // Handle exeptions and close the DatagramSocket
