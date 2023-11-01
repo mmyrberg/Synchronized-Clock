@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
     // Method for getting the NTP time
     private String getNtpTime() {
         NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP (DatagramSocket) connection with NTP server
-        client.setDefaultTimeout(5000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
+        client.setDefaultTimeout(1000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
 
         try {
             InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of the NTP server
@@ -91,10 +91,10 @@ public class MainActivity extends AppCompatActivity {
             // Handle exeptions and close the DatagramSocket
         } catch (IOException e) {
             e.printStackTrace();
-            return "Error: " + e.getMessage();
         } finally {
             client.close();
         }
+        return null;
     }
 
     // Check if internet connection is available. Return true or false
