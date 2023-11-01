@@ -78,10 +78,10 @@ public class MainActivity extends AppCompatActivity {
     // Method for getting the NTP time
     private String getNtpTime() {
         NTPUDPClient client = new NTPUDPClient(); // Create an instance of the NTPUDPClient class for a UDP (DatagramSocket) connection with NTP server
-        client.setDefaultTimeout(1000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
+        client.setDefaultTimeout(2000); // Set a timeout to prevent the client from waiting indefinitely for the server to response
 
         try {
-            InetAddress inetAddress = InetAddress.getByName("3.se.pool.ntp.org"); // Determine the IP-address of the NTP server
+            InetAddress inetAddress = InetAddress.getByName("2.se.pool.ntp.org"); // Determine the IP-address of the NTP server
             TimeInfo timeInfo = client.getTime(inetAddress); // Request time information from the NTP server
             long ntpTime = timeInfo.getReturnTime(); // Retrieve the NTP time in milliseconds
 
